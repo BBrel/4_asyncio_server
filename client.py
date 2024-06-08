@@ -1,23 +1,24 @@
 import asyncio
 
 
-HOST = 'localhost'
-PORT = 9095
+class EchoClient:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+
+    async def send_message(self, message):
+        reader, writer = await asyncio.open_connection(
+            self.host, self.port)
+
+        print(f'Send: {message}')
+        writer.write(message.encode())
+
+        data = await reader.read(100)
+        print(f'Received: {data.decode()}')
+        writer.close()
+        await writer.wait_closed()
 
 
-async def tcp_echo_client(host, port):
-    reader, writer = await asyncio.open_connection(host, port)
-    message = 'Hello, world'
-
-    writer.write(message.encode())
-    await writer.drain()
-
-    data = await reader.read(100)
-    writer.close()
-    # await writer.wait_closed()
-
-# asyncio.run(tcp_echo_client(HOST, PORT))
-
-loop = asyncio.get_event_loop()
-task = loop.create_task(tcp_echo_client(HOST, PORT))
-loop.run_until_complete(task)
+# Запуск клиента и отправка сообщения
+client = EchoClient('127.0.0.1', 8888)
+asyncio.run(client.send_message('Hello World!'))
